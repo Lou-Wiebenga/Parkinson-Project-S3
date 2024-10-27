@@ -4,7 +4,7 @@
 
 #include "smartSleep.h"
 
-smartSleep::smartSleep() {
+smartSleep::smartSleep() : lcd(SS_LCD_ADDRESS), leds(SS_LED_COUNT, LED_DATA_PIN, NEO_GRB + NEO_KHZ800) {
 
 }
 
@@ -20,20 +20,51 @@ void smartSleep::timeCalibrate() {
     //DS3231::setSecond();
 }
 
-void smartSleep::lampSleepSequence() {
+void smartSleep::lampSleepSequence(int minutes) {
+    bool fadeIn = true;
+    bool seqFinished = false;
+    unsigned long currMillis = 0;
+    unsigned long prevMillis = 0;
+    unsigned long delayMs = (minutes * 60 * 1000) / 510;
+    uint8_t pBrightness = 0; //pixel brightness
+
     leds.clear();
-    for(int i=0; i < SS_LED_COUNT; i++) { // For each pixel in strip...
-        leds.setPixelColor(i, leds.Color(155, 0, 0));         //  Set pixel's color (in RAM)
-        leds.show();                          //  Update strip to match
-        delay(50);                           //  Pause for a moment
+
+    while (!seqFinished) {
+      currMillis = millis();
+      if ((currMillis - prevMillis) >= delayMs) {
+        prevMillis = currMillis;
+        lampColor(leds.Color(pBrightness, 0, 0));
+        if (fadeIn) {pBrightness++;} else if (!fadeIn) {pBrightness--;}
+        if (pBrightness == 255) {fadeIn = false;} else if (pBrightness == 0) {seqFinished = true;}
+      }
     }
 }
 
-void smartSleep::lampWakeSequence() {
+void smartSleep::lampWakeSequence(int minutes) {
+    bool fadeIn = true;
+    bool seqFinished = false;
+    unsigned long currMillis = 0;
+    unsigned long prevMillis = 0;
+    unsigned long delayMs = (minutes * 60 * 1000) / 510;
+    uint8_t pBrightness = 0; //pixel brightness
+
     leds.clear();
-    for(int i=0; i < SS_LED_COUNT; i++) { // For each pixel in strip...
-        leds.setPixelColor(i, leds.Color(0, 0, 155));         //  Set pixel's color (in RAM)
-        leds.show();                          //  Update strip to match
-        delay(50);                           //  Pause for a moment
+
+    while (!seqFinished) {
+        currMillis = millis();
+        if ((currMillis - prevMillis) >= delayMs) {
+            prevMillis = currMillis;
+            lampColor(leds.Color(0, 0, pBrightness));
+            if (fadeIn) {pBrightness++;} else if (!fadeIn) {pBrightness--;}
+            if (pBrightness == 255) {fadeIn = false;} else if (pBrightness == 0) {seqFinished = true;}
+        }
+    }
+}
+
+void smartSleep::lampColor(uint32_t color) {
+    for (int i=0; i < SS_LED_COUNT; i++) {
+      leds.setPixelColor(i, color);
+      leds.show();
     }
 }
