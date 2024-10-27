@@ -22,19 +22,21 @@ public:
 
     void timeCalibrate();
 
-    void lampSleepSequence();
-    void lampWakeSequence();
+    void lampSleepSequence(int minutes);
+    void lampWakeSequence(int minutes);
     void startAlarm();
+
+    void lampColor(uint32_t color);
 
     void setLampOnTime();
     void setLampOffTime();
     void setAlarm();
 
-    I2C_LCD lcd(LCD_ADDRESS);
-    Adafruit_NeoPixel leds(SS_LED_COUNT, SS_LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
+    I2C_LCD lcd;
+    Adafruit_NeoPixel leds;
 
 //private:
-    unsigned long sSmillis = 0;
+    //unsigned long sSmillis = 0;
     //byte alarmH; --alarm hour
     //byte alarmM; --alarm minute
 };
