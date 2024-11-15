@@ -59,9 +59,9 @@ public:
     bool lampTurnedOn;
 
     uint8_t wakeHr; //wake time hour
-    uint8_t wakeMin; //wake time minute
+    uint8_t wakeMins; //wake time minutes
     uint8_t sleepHr; //sleep time hour
-    uint8_t sleepMin; //sleep time minute
+    uint8_t sleepMins; //sleep time minutes
 
     void init(); //initializes LCD, LEDs and RTC
 
@@ -70,8 +70,11 @@ public:
     void lcdPrintCenter(uint8_t row, const char* text); //prints text in the center of row
     void lcdClear(); //clears text on LCD
     void lcdSetCursor(uint8_t col, uint8_t row); //sets lcd cursor
+    void lcdHome(); //resets cursor position
     void lcdPrintTime(uint8_t row, uint8_t hour, uint8_t mins); //prints hour and min in "hh:mm" format in center of row on LCD
     void lcdPrintCurrTime(uint8_t row); //prints current time in "hh:mm" format in center of row on LCD
+	void lcdInputModeOn(); //turns on blinking cursor for user input
+    void lcdInputModeOff();//turns off blinking cursor
 
     void lampFadeIn (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color); //fades LEDs in
     void lampFadeOut (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color); //fades LEDs out
@@ -83,11 +86,17 @@ public:
 
     bool isLampOn(); //returns true if LEDs are on, else returns false
 
-    //void timeSync(); //RTC sync: reads PC time and inputs it into RTC
-    uint8_t getCurrHr(); //reads current hour from RTC
-    uint8_t getCurrMins(); //reads current minutes from RTC
-    void setWakeTime(uint8_t hr, uint8_t mins); //sets wake sequence trigger time
-    void setSleepTime(uint8_t hr, uint8_t mins); //sets sleep sequence trigger time
+    uint8_t getCurrHr();//returns current hour
+    uint8_t getCurrMins();//returns current minutes
+    uint8_t getWakeHr(); //returns currently set wake hr
+    uint8_t getWakeMins();//returns currently set wake minutes
+    uint8_t getSleepHr();//returns currently set sleep hr
+    uint8_t getSleepMins();//returns currently set wake minutes
+
+    void setWakeHr(uint8_t hr); //sets wake sequence trigger hour
+    void setWakeMins(uint8_t mins);//sets wake sequence trigger minutes
+    void setSleepHr(uint8_t hr); //sets sleep sequence trigger hour
+    void setSleepMins(uint8_t mins);//sets wake sequence trigger minutes
 
     void setCurrColor(/*smartSleep::Colors*/ int c); //sets lamp color in idle mode
     void setCurrBrightnessLvl(/*smartSleep::BrightnessLevels*/ uint8_t b); //sets lamp brightness in idle mode

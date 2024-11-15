@@ -9,9 +9,9 @@ smartSleep::smartSleep() : lcd(SS_LCD_ADDRESS), leds(SS_LED_COUNT, LED_DATA_PIN,
     currBrightnessLvl = LO;
     lampTurnedOn = false;
     wakeHr = 7;
-    wakeMin = 0;
+    wakeMins = 0;
     sleepHr = 23;
-    sleepMin = 0;
+    sleepMins = 0;
 }
 
 void smartSleep::init() {
@@ -49,6 +49,10 @@ void smartSleep::lcdSetCursor(uint8_t col, uint8_t row) {
   lcd.setCursor(col, row);
 }
 
+void smartSleep::lcdHome() {
+  lcd.home();
+}
+
 void smartSleep::lcdPrintTime(uint8_t row, uint8_t hour, uint8_t mins) {
 /*TO BE IMPLEMNTED
  (possible solutions below)
@@ -61,10 +65,26 @@ void smartSleep::lcdPrintTime(uint8_t row, uint8_t hour, uint8_t mins) {
 --No2:
   use .toString
  */
+  lcd.setCursor(5, row);
+  if (hour < 10) lcd.print(0);
+  lcd.print(hour);
+  lcd.print(":");
+  if (mins < 10) lcd.print(0);
+  lcd.print(mins);
 }
 
 void smartSleep::lcdPrintCurrTime(uint8_t row) {			//NOT TESTED
   lcdPrintCenter(row, RTC_getHhMmString());
+}
+
+void smartSleep::lcdInputModeOn() {
+  lcd.cursor();
+  lcd.blink();
+}
+
+void smartSleep::lcdInputModeOff() {
+  lcd.noCursor();
+  lcd.noBlink();
 }
 
 void smartSleep::lampFadeIn (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color) {
@@ -181,24 +201,6 @@ bool smartSleep::isLampOn() {
   return lampTurnedOn;
 }
 
-uint8_t smartSleep::getCurrHr() {
-  return RTC_readTime(Hour);
-}
-
-uint8_t smartSleep::getCurrMins() {
-  return RTC_readTime(Minutes);
-}
-
-void smartSleep::setWakeTime(uint8_t hr, uint8_t mins) {
-  wakeHr = hr;
-  wakeMin = mins;
-}
-
-void smartSleep::setSleepTime(uint8_t hr, uint8_t mins) {
-  sleepHr = hr;
-  sleepMin = mins;
-}
-
 void smartSleep::setCurrColor(/*smartSleep::Colors*/ int c) {
   currColor = c;
 }
@@ -214,3 +216,44 @@ void smartSleep::setCurrBrightnessLvl(/*smartSleep::BrightnessLevels*/ uint8_t b
 /*smartSleep::BrightnessLevels*/ uint8_t smartSleep::getCurrBrightnessLvl() {
   return currBrightnessLvl;
 }
+
+uint8_t smartSleep::getCurrHr() {
+  return RTC_readTime(Hour);
+}
+
+uint8_t smartSleep::getCurrMins() {
+  return RTC_readTime(Minutes);
+}
+
+uint8_t smartSleep::getWakeHr() {
+  return wakeHr;
+}
+
+uint8_t smartSleep::getWakeMins() {
+  return wakeMins;
+}
+
+uint8_t smartSleep::getSleepHr() {
+  return sleepHr;
+}
+
+uint8_t smartSleep::getSleepMins() {
+  return sleepMins;
+}
+
+void smartSleep::setWakeHr(uint8_t hr) {
+  wakeHr = hr;
+}
+
+void smartSleep::setWakeMins(uint8_t mins) {
+  wakeMins = mins;
+}
+
+void smartSleep::setSleepHr(uint8_t hr) {
+  sleepHr = hr;
+}
+
+void smartSleep::setSleepMins(uint8_t mins) {
+  sleepMins = mins;
+}
+
