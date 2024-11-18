@@ -16,8 +16,8 @@ smartSleep::smartSleep() : lcd(SS_LCD_ADDRESS), leds(SS_LED_COUNT, LED_DATA_PIN,
 
 void smartSleep::init() {
 
-  	RTC_init();
-    RTC_setTimeAuto();
+  	//RTC_init();
+    //RTC_setTimeAuto();
 
     leds.begin();
     leds.clear();
@@ -54,17 +54,6 @@ void smartSleep::lcdHome() {
 }
 
 void smartSleep::lcdPrintTime(uint8_t row, uint8_t hour, uint8_t mins) {
-/*TO BE IMPLEMNTED
- (possible solutions below)
-
---No1:
- char buf[5];
- itoa(hour, buf, 10);
-  ...
-
---No2:
-  use .toString
- */
   lcd.setCursor(5, row);
   if (hour < 10) lcd.print(0);
   lcd.print(hour);
@@ -160,7 +149,7 @@ void smartSleep::lampOn(/*smartSleep::Colors*/ int c, uint8_t brightness) {
       color = leds.Color(brightness, 0, 0);
       break;
     case ORANGE:
-      color = leds.Color(brightness, brightness, 0);
+      color = leds.Color(brightness, (brightness/2), 0);
       break;
     case YELLOW:
       color = leds.Color(brightness, brightness, 0);
@@ -178,7 +167,7 @@ void smartSleep::lampOn(/*smartSleep::Colors*/ int c, uint8_t brightness) {
       color = leds.Color(brightness, brightness, brightness);
       break;
     case WARM_WHITE:
-      color = leds.Color(brightness, brightness, brightness);
+      color = leds.Color(brightness, brightness, (brightness/2));
       break;
     default:
       ;
