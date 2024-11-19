@@ -4,11 +4,12 @@
 
 #define BUTTON_DEBOUNCE_MILLIS 50
 #define BUTTON_AMOUNT          5
-#define ONOFF_BUTTON_PIN    NULL
-#define SELECT_BUTTON_PIN    5
-#define MENU_BUTTON_PIN    4
-#define PLUS_BUTTON_PIN    NULL
-#define MINUS_BUTTON_PIN    NULL
+#define ONOFF_BUTTON_PIN    13
+#define SELECT_BUTTON_PIN    12
+#define MENU_BUTTON_PIN    14
+#define PLUS_BUTTON_PIN    27
+#define MINUS_BUTTON_PIN    26
+#define INT_PIN 5
 
 unsigned long prevMillis = 0;
 
@@ -43,9 +44,28 @@ enum States {
 
 enum States currState = S_WELCOME;
 
+int cnt = 0;
+
 smartSleep wekker;
 
+/*void RTC_INT_Trigger() {
+  volatile uint8_t RTC_INT = 1;
+  cnt++;
+  if (cnt == 5){
+    Wire.beginTransmission(0x51);
+    Serial.print(RTC_readTime(Minutes));
+    cnt = 0;
+    Wire.endTransmission(0x51);
+  }
+}*/
+
 void setup() {
+
+  Serial.begin(115200);
+
+  //pinMode(INT_PIN, INPUT);        // set up interrupt pin
+  //digitalWrite(INT_PIN, HIGH);    // turn on pullup resistors
+  //attachInterrupt(digitalPinToInterrupt(INT_PIN), RTC_INT_Trigger, RISING);
 
   pinMode(PLUS_BUTTON_PIN, INPUT_PULLUP);
   pinMode(MINUS_BUTTON_PIN, INPUT_PULLUP);
@@ -56,6 +76,8 @@ void setup() {
   Wire.begin();
   Wire.setClock(100000);
 
+  //Wire.beginTransmission(0x27);
+  //Wire.beginTransmission(0x51);
   wekker.init();
 
 }
@@ -91,16 +113,35 @@ void loop() {
 
       if (buttonPressed[B_SELECT]) {
         if (inputMode == I_HR) {inputMode = I_MINS;} else {inputMode = I_HR;}
+        buttonPressed[B_SELECT] = false;
       }
 
       if (buttonPressed[B_PLUS]) {
-        if(inputMode == I_HR) {wekker.setWakeHr(wekker.getWakeHr() + 1);}
-        else {wekker.setWakeMins(wekker.getWakeMins() + 1);}
+        switch (inputMode) {
+          case I_HR:
+            if (wekker.getWakeHr() == 23) {wekker.setWakeHr(0);} 
+            else {wekker.setWakeHr(wekker.getWakeHr() + 1);}
+            break;
+          case I_MINS:
+            if (wekker.getWakeMins() == 55) {wekker.setWakeMins(0);}
+            else {wekker.setWakeMins(wekker.getWakeMins() + 5);}
+            break;
+        }
+        buttonPressed[B_PLUS] = false;
       }
 
       if (buttonPressed[B_MINUS]) {
-        if(inputMode == I_HR) {wekker.setWakeHr(wekker.getWakeHr() - 1);}
-        else {wekker.setWakeMins(wekker.getWakeMins() - 1);}
+        switch (inputMode) {
+          case I_HR:
+            if (wekker.getWakeHr() == 0) {wekker.setWakeHr(23);} 
+            else {wekker.setWakeHr(wekker.getWakeHr() - 1);}
+            break;
+          case I_MINS:
+            if (wekker.getWakeMins() == 0) {wekker.setWakeMins(55);}
+            else {wekker.setWakeMins(wekker.getWakeMins() - 5);}
+            break;
+        }
+        buttonPressed[B_MINUS] = false;
       }
 
       if (buttonPressed[B_MENU]) {
@@ -118,16 +159,35 @@ void loop() {
 
       if (buttonPressed[B_SELECT]) {
         if (inputMode == I_HR) {inputMode = I_MINS;} else {inputMode = I_HR;}
+        buttonPressed[B_SELECT] = false;
       }
 
       if (buttonPressed[B_PLUS]) {
-        if(inputMode == I_HR) {wekker.setSleepHr(wekker.getSleepHr() + 1);}
-        else {wekker.setSleepMins(wekker.getSleepMins() + 1);}
+        switch (inputMode) {
+          case I_HR:
+            if (wekker.getSleepHr() == 23) {wekker.setSleepHr(0);} 
+            else {wekker.setSleepHr(wekker.getSleepHr() + 1);}
+            break;
+          case I_MINS:
+            if (wekker.getSleepMins() == 55) {wekker.setSleepMins(0);}
+            else {wekker.setSleepMins(wekker.getSleepMins() + 5);}
+            break;
+        }
+        buttonPressed[B_PLUS] = false;
       }
 
       if (buttonPressed[B_MINUS]) {
-        if(inputMode == I_HR) {wekker.setSleepHr(wekker.getSleepHr() - 1);}
-        else {wekker.setSleepMins(wekker.getSleepMins() - 1);}
+        switch (inputMode) {
+          case I_HR:
+            if (wekker.getSleepHr() == 0) {wekker.setSleepHr(23);} 
+            else {wekker.setSleepHr(wekker.getSleepHr() - 1);}
+            break;
+          case I_MINS:
+            if (wekker.getSleepMins() == 0) {wekker.setSleepMins(55);}
+            else {wekker.setSleepMins(wekker.getSleepMins() - 5);}
+            break;
+        }
+        buttonPressed[B_MINUS] = false;
       }
       
       if (buttonPressed[B_MENU]) {
@@ -140,13 +200,25 @@ void loop() {
 
     case S_IDLE:
 
-      if ((wekker.getSleepHr() == wekker.getCurrHr()) && (wekker.getSleepMins() == wekker.getCurrMins())) {
+      wekker.lcdSetCursor(1, 2);
+      
+      //RTC_readTime(Minutes);
+      
+      Serial.println(RTC_readTime(Hour));
+      Serial.println("hour");
+      Serial.println(RTC_readTime(Minutes));
+      Serial.println("mins");
+
+      wekker.lcdPrintCurrTime(2);
+      wekker.lcdHome();
+      
+      /*if ((wekker.getSleepHr() == wekker.getCurrHr()) && (wekker.getSleepMins() == wekker.getCurrMins())) {
         currState = S_SLEEP;
       }
 
       else if ((wekker.getWakeHr() == wekker.getCurrHr()) && (wekker.getWakeMins() == wekker.getCurrMins())) {
         currState = S_WAKE;
-      }
+      }*/
 
       if (buttonPressed[B_ONOFF]) {
         if (wekker.isLampOn()) {
@@ -222,6 +294,6 @@ void loop() {
     prevMillis = currMillis;
   
   }
-
-
+  
 }
+
