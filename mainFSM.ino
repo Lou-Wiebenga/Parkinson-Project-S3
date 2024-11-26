@@ -35,6 +35,7 @@ timeInputMode inputMode = I_HR;
 
 enum States {
   S_WELCOME,
+  S_TIME_SYNC,
   S_WAKE_TIME_SETUP,
   S_SLEEP_TIME_SETUP,
   S_IDLE,
@@ -51,11 +52,11 @@ smartSleep wekker;
 /*void RTC_INT_Trigger() {
   volatile uint8_t RTC_INT = 1;
   cnt++;
-  if (cnt == 5){
-    Wire.beginTransmission(0x51);
-    Serial.print(RTC_readTime(Minutes));
-    cnt = 0;
-    Wire.endTransmission(0x51);
+  if (cnt == 15){
+      if ((currState == S_SLEEP) || (currState == S_WAKE)){
+        wekker.lcdHome();
+      }
+      cnt = 0;
   }
 }*/
 
@@ -76,33 +77,102 @@ void setup() {
   Wire.begin();
   Wire.setClock(100000);
 
-  //Wire.beginTransmission(0x27);
-  //Wire.beginTransmission(0x51);
   wekker.init();
 
+  Serial.print("Hour: ");
+  Serial.println(wekker.getCurrHr());
+  Serial.print("Minutes: ");
+  Serial.println(wekker.getCurrMins());
+
+  wekker.lampOff();
 }
 
 void loop() {
 
   unsigned long currMillis = millis();
 
+  if (buttonPressed[B_ONOFF]) {
+    if (currState == S_SLEEP || currState == S_WAKE) {
+      wekker.lampOff();
+      currState = S_IDLE;
+      }
+    else {
+      if (wekker.isLampOn()) {
+        wekker.lampOff();
+      } else {
+        wekker.lampOn(wekker.currColor, wekker.currBrightnessLvl);
+      }
+    }
+    buttonPressed[B_ONOFF] = false;
+  }
+
   switch(currState) {
 
     case S_WELCOME:
 
-      wekker.lampOff();
       wekker.lcdSetCursor(1, 2);
       wekker.lcdPrint("Welcome!");
       wekker.lcdSetCursor(1, 1);
       wekker.lcdPrint("Press MENU");
       wekker.lcdHome();
+
       if (buttonPressed[B_MENU]) {
-        currState = S_WAKE_TIME_SETUP;
+        currState = S_TIME_SYNC;
         buttonPressed[B_MENU] = false;
         wekker.lcdClear();
         wekker.lcdInputModeOn();
       }
       break;
+
+    case S_TIME_SYNC:
+
+      wekker.lcdSetCursor(1, 2);
+      wekker.lcdPrint("Current time:   ");
+      wekker.lcdPrintTime(1, wekker.getInitHr(), wekker.getInitMins());
+      wekker.lcdHome();
+
+      if (buttonPressed[B_SELECT]) {
+        if (inputMode == I_HR) {inputMode = I_MINS;} else {inputMode = I_HR;}
+        buttonPressed[B_SELECT] = false;
+      }
+
+      if (buttonPressed[B_PLUS]) {
+        switch (inputMode) {
+          case I_HR:
+            if (wekker.getInitHr() == 23) {wekker.setInitHr(0);} 
+            else {wekker.setInitHr(wekker.getInitHr() + 1);}
+            break;
+          case I_MINS:
+            if (wekker.getInitMins() == 59) {wekker.setInitMins(0);}
+            else {wekker.setInitMins(wekker.getInitMins() + 1);}
+            break;
+        }
+        buttonPressed[B_PLUS] = false;
+      }
+
+      if (buttonPressed[B_MINUS]) {
+        switch (inputMode) {
+          case I_HR:
+            if (wekker.getInitHr() == 0) {wekker.setInitHr(23);} 
+            else {wekker.setInitHr(wekker.getInitHr() - 1);}
+            break;
+          case I_MINS:
+            if (wekker.getInitMins() == 0) {wekker.setInitMins(59);}
+            else {wekker.setInitMins(wekker.getInitMins() - 1);}
+            break;
+        }
+        buttonPressed[B_MINUS] = false;
+      }
+
+      if (buttonPressed[B_MENU]) {
+        wekker.setInitTime(wekker.getInitHr(), wekker.getInitMins());
+        currState = S_WAKE_TIME_SETUP;
+        buttonPressed[B_MENU] = false;
+        wekker.lcdClear();
+        inputMode = I_HR;
+      }
+      break;
+
 
     case S_WAKE_TIME_SETUP:
     
@@ -148,6 +218,7 @@ void loop() {
         currState = S_SLEEP_TIME_SETUP;
         buttonPressed[B_MENU] = false;
         wekker.lcdClear();
+        inputMode = I_HR;
       }
       break;
 
@@ -195,39 +266,37 @@ void loop() {
         buttonPressed[B_MENU] = false;
         wekker.lcdClear();
         wekker.lcdInputModeOff();
+        inputMode = I_HR;
       }
       break;
 
     case S_IDLE:
 
-      wekker.lcdSetCursor(1, 2);
-      
-      //RTC_readTime(Minutes);
-      
-      Serial.println(RTC_readTime(Hour));
-      Serial.println("hour");
-      Serial.println(RTC_readTime(Minutes));
-      Serial.println("mins");
-
-      wekker.lcdPrintCurrTime(2);
       wekker.lcdHome();
-      
-      /*if ((wekker.getSleepHr() == wekker.getCurrHr()) && (wekker.getSleepMins() == wekker.getCurrMins())) {
+      wekker.lcdPrintCurrTime();
+
+      if ((wekker.getSleepHr() == wekker.getCurrHr()) && (wekker.getSleepMins() == wekker.getCurrMins())) {
+        wekker.lcdClear();
+        wekker.lcdHome();
+        wekker.lcdPrint("Good night!");
         currState = S_SLEEP;
       }
 
       else if ((wekker.getWakeHr() == wekker.getCurrHr()) && (wekker.getWakeMins() == wekker.getCurrMins())) {
+        wekker.lcdClear();
+        wekker.lcdHome();
+        wekker.lcdPrint("Good morning!");
         currState = S_WAKE;
-      }*/
+      }
 
-      if (buttonPressed[B_ONOFF]) {
+      /*if (buttonPressed[B_ONOFF]) {
         if (wekker.isLampOn()) {
           wekker.lampOff();
         } else {
           wekker.lampOn(wekker.currColor, wekker.currBrightnessLvl);
         }
         buttonPressed[B_ONOFF] = false;
-      }
+      }*/
 
       else if (buttonPressed[B_PLUS]) {
         if (wekker.getCurrBrightnessLvl() == HI) {
@@ -267,12 +336,14 @@ void loop() {
       break;
 
     case S_SLEEP:
-      wekker.lampSleepSequence(30, wekker.getCurrBrightnessLvl());
+      wekker.lampSleepSequence(1, 1, wekker.getCurrBrightnessLvl());
+      wekker.lcdClear();
       currState = S_IDLE;
       break;
 
     case S_WAKE:
-      wekker.lampWakeSequence(30, wekker.getCurrBrightnessLvl());
+      wekker.lampWakeSequence(1, 1, wekker.getCurrBrightnessLvl());
+      wekker.lcdClear();
       currState = S_IDLE;
       break;
 
@@ -296,4 +367,3 @@ void loop() {
   }
   
 }
-

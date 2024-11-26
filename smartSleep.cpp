@@ -8,6 +8,8 @@ smartSleep::smartSleep() : lcd(SS_LCD_ADDRESS), leds(SS_LED_COUNT, LED_DATA_PIN,
     currColor = YELLOW;
     currBrightnessLvl = LO;
     lampTurnedOn = false;
+    initHr = 12;
+    initMins = 30;
     wakeHr = 7;
     wakeMins = 0;
     sleepHr = 23;
@@ -16,7 +18,7 @@ smartSleep::smartSleep() : lcd(SS_LCD_ADDRESS), leds(SS_LED_COUNT, LED_DATA_PIN,
 
 void smartSleep::init() {
 
-  	//RTC_init();
+  	RTC_init();
     //RTC_setTimeAuto();
 
     leds.begin();
@@ -62,8 +64,24 @@ void smartSleep::lcdPrintTime(uint8_t row, uint8_t hour, uint8_t mins) {
   lcd.print(mins);
 }
 
-void smartSleep::lcdPrintCurrTime(uint8_t row) {			//NOT TESTED
-  lcdPrintCenter(row, RTC_getHhMmString());
+void smartSleep::lcdPrintCurrTime() {			//NOT TESTED
+  if (RTC_readTime(Hour) < 10) {
+    lcd.print(0);
+    lcd.print(RTC_readTime(Hour));
+  }
+  else {
+      lcd.print(RTC_readTime(Hour));
+  }
+
+  lcd.print(":");
+
+  if (RTC_readTime(Minutes) < 10) {
+    lcd.print(0);
+    lcd.print(RTC_readTime(Minutes));
+  }
+  else {
+    lcd.print(RTC_readTime(Minutes));
+  }
 }
 
 void smartSleep::lcdInputModeOn() {
@@ -74,70 +92,6 @@ void smartSleep::lcdInputModeOn() {
 void smartSleep::lcdInputModeOff() {
   lcd.noCursor();
   lcd.noBlink();
-}
-
-void smartSleep::lampFadeIn (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color) {
-    unsigned long currMillis = 0;
-    unsigned long prevMillis = 0;
-    unsigned long delayMs = (mins * 60 * 1000) / maxBrightness;
-    uint8_t pBrightness = 0; //pixel brightness
-
-    leds.clear();
-
-    while (pBrightness != maxBrightness) {
-      currMillis = millis();
-      if ((currMillis - prevMillis) >= delayMs) {
-        prevMillis = currMillis;
-        lampOn(color, pBrightness);
-        pBrightness++;
-      }
-    }
-}
-
-void smartSleep::lampFadeOut(int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color) {
-    unsigned long currMillis = 0;
-    unsigned long prevMillis = 0;
-    unsigned long delayMs = (mins * 60 * 1000) / maxBrightness;
-    uint8_t pBrightness = maxBrightness; //pixel brightness
-
-    leds.clear();
-
-    while (pBrightness != 0) {
-      currMillis = millis();
-      if ((currMillis - prevMillis) >= delayMs) {
-        prevMillis = currMillis;
-        lampOn(color, pBrightness);
-        pBrightness--;
-      }
-    }
-}
-
-void smartSleep::lampSleepSequence(int onTimeMins, uint8_t maxBrightness) {
-    unsigned long currMillis = 0;
-    unsigned long delayMs = (onTimeMins * 60 * 1000);
-
-    leds.clear();
-
-    lampFadeIn(5, maxBrightness, RED);
-
-    currMillis = millis();
-    if (currMillis >= delayMs) {
-        lampFadeOut(5, maxBrightness, RED);
-    }
-}
-
-void smartSleep::lampWakeSequence(int onTimeMins, uint8_t maxBrightness) {
-    unsigned long currMillis = 0;
-    unsigned long delayMs = (onTimeMins * 60 * 1000);
-
-    leds.clear();
-
-    lampFadeIn(5, maxBrightness, BLUE);
-
-    currMillis = millis();
-    if (currMillis >= delayMs) {
-        lampFadeOut(5, maxBrightness, BLUE);
-    }
 }
 
 void smartSleep::lampOn(/*smartSleep::Colors*/ int c, uint8_t brightness) {
@@ -186,6 +140,85 @@ void smartSleep::lampOff() {
   lampTurnedOn = false;
 }
 
+void smartSleep::lampFadeIn (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color) {
+    unsigned long currMillis = 0;
+    unsigned long prevMillis = 0;
+    unsigned long delayMs = (mins * 60 * 1000) / maxBrightness;
+    uint8_t pBrightness = 0; //pixel brightness
+
+    leds.clear();
+
+    while (pBrightness != maxBrightness) {
+      currMillis = millis();
+      if ((currMillis - prevMillis) >= delayMs) {
+        prevMillis = currMillis;
+        lampOn(color, pBrightness);
+        pBrightness++;
+      }
+    }
+}
+
+void smartSleep::lampFadeOut(int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color) {
+    unsigned long currMillis = 0;
+    unsigned long prevMillis = 0;
+    unsigned long delayMs = (mins * 60 * 1000) / maxBrightness;
+    uint8_t pBrightness = maxBrightness; //pixel brightness
+
+    leds.clear();
+
+    while (pBrightness != 0) {
+      currMillis = millis();
+      if ((currMillis - prevMillis) >= delayMs) {
+        prevMillis = currMillis;
+        lampOn(color, pBrightness);
+        pBrightness--;
+      }
+    }
+    lampOff();
+}
+
+void smartSleep::lampSleepSequence(int fadeMins, int onTimeMins, uint8_t maxBrightness) {
+    unsigned long currMillis = 0;
+    unsigned long prevMillis = 0;
+    unsigned long delayMs = onTimeMins * 60 * 1000;
+
+    leds.clear();
+
+    lampFadeIn(fadeMins, maxBrightness, RED);
+
+    currMillis = millis();
+    prevMillis = millis();
+    
+    while ((currMillis - prevMillis) < delayMs) {
+      currMillis = millis();
+      lampOn(RED, maxBrightness);
+    }
+    //if (currMillis >= delayMs) {
+        lampFadeOut(fadeMins, maxBrightness, RED);
+    //}
+}
+
+void smartSleep::lampWakeSequence(int fadeMins, int onTimeMins, uint8_t maxBrightness) {
+    unsigned long currMillis = 0;
+    unsigned long prevMillis = 0;
+    unsigned long delayMs = onTimeMins * 60 * 1000;
+
+    leds.clear();
+
+    lampFadeIn(fadeMins, maxBrightness, BLUE);
+
+    currMillis = millis();
+    prevMillis = millis();
+
+    while ((currMillis - prevMillis) < delayMs) {
+      currMillis = millis();
+      lampOn(BLUE, maxBrightness);
+    }
+    //if (currMillis >= delayMs) {
+        lampFadeOut(fadeMins, maxBrightness, BLUE);
+    //}
+}
+
 bool smartSleep::isLampOn() {
   return lampTurnedOn;
 }
@@ -204,6 +237,14 @@ void smartSleep::setCurrBrightnessLvl(/*smartSleep::BrightnessLevels*/ uint8_t b
 
 /*smartSleep::BrightnessLevels*/ uint8_t smartSleep::getCurrBrightnessLvl() {
   return currBrightnessLvl;
+}
+
+uint8_t smartSleep::getInitHr() {
+  return initHr;
+}
+
+uint8_t smartSleep::getInitMins() {
+  return initMins;
 }
 
 uint8_t smartSleep::getCurrHr() {
@@ -228,6 +269,18 @@ uint8_t smartSleep::getSleepHr() {
 
 uint8_t smartSleep::getSleepMins() {
   return sleepMins;
+}
+
+void smartSleep::setInitTime(uint8_t hr, uint8_t mins) {
+  RTC_setTimeManual(2024, 11, 25, hr, mins, 0);
+}
+
+void smartSleep::setInitHr(uint8_t hr) {
+  initHr = hr;
+}
+
+void smartSleep::setInitMins(uint8_t mins) {
+  initMins = mins;
 }
 
 void smartSleep::setWakeHr(uint8_t hr) {

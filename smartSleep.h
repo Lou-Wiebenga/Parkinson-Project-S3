@@ -58,6 +58,8 @@ public:
     /*smartSleep::BrightnessLevels*/ uint8_t currBrightnessLvl; //currently set brightness level
     bool lampTurnedOn;
 
+    uint8_t initHr; //initial hour
+    uint8_t initMins; //initial minutes
     uint8_t wakeHr; //wake time hour
     uint8_t wakeMins; //wake time minutes
     uint8_t sleepHr; //sleep time hour
@@ -72,20 +74,22 @@ public:
     void lcdSetCursor(uint8_t col, uint8_t row); //sets lcd cursor
     void lcdHome(); //resets cursor position
     void lcdPrintTime(uint8_t row, uint8_t hour, uint8_t mins); //prints hour and min in "hh:mm" format in center of row on LCD
-    void lcdPrintCurrTime(uint8_t row); //prints current time in "hh:mm" format in center of row on LCD
+    void lcdPrintCurrTime(); //prints current time in "hh:mm" format in center of row on LCD
 	void lcdInputModeOn(); //turns on blinking cursor for user input
     void lcdInputModeOff();//turns off blinking cursor
-
-    void lampFadeIn (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color); //fades LEDs in
-    void lampFadeOut (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color); //fades LEDs out
-    void lampSleepSequence(int onTimeMins, uint8_t maxBrightness); //fades in red LEDs, stays on for onTimeMins minutes, fades out
-    void lampWakeSequence(int onTimeMins, uint8_t maxBrightness); //fades in blue LEDs, stays on for onTimeMins minutes, fades out
 
     void lampOn(/*smartSleep::Colors*/ int c, uint8_t brightness); //turns on LED ring with color c and set brightness
     void lampOff(); //turns LED ring off
 
+    void lampFadeIn (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color); //fades LEDs in
+    void lampFadeOut (int mins, uint8_t maxBrightness, /*smartSleep::Colors*/ int color); //fades LEDs out
+    void lampSleepSequence(int fadeMins, int onTimeMins, uint8_t maxBrightness); //fades in red LEDs, stays on for onTimeMins minutes, fades out
+    void lampWakeSequence(int fadeMins, int onTimeMins, uint8_t maxBrightness); //fades in blue LEDs, stays on for onTimeMins minutes, fades out
+
     bool isLampOn(); //returns true if LEDs are on, else returns false
 
+    uint8_t getInitHr(); //returns initial RTC hour
+    uint8_t getInitMins(); //returns initial RTC minutes
     uint8_t getCurrHr();//returns current hour
     uint8_t getCurrMins();//returns current minutes
     uint8_t getWakeHr(); //returns currently set wake hr
@@ -93,6 +97,9 @@ public:
     uint8_t getSleepHr();//returns currently set sleep hr
     uint8_t getSleepMins();//returns currently set wake minutes
 
+    void setInitTime(uint8_t hr, uint8_t mins); //sets initial RTC time
+    void setInitHr(uint8_t hr); //sets initial RTC hour
+    void setInitMins(uint8_t mins); //sets initial RTC minutes
     void setWakeHr(uint8_t hr); //sets wake sequence trigger hour
     void setWakeMins(uint8_t mins);//sets wake sequence trigger minutes
     void setSleepHr(uint8_t hr); //sets sleep sequence trigger hour
