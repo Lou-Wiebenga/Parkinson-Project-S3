@@ -289,15 +289,6 @@ void loop() {
         currState = S_WAKE;
       }
 
-      /*if (buttonPressed[B_ONOFF]) {
-        if (wekker.isLampOn()) {
-          wekker.lampOff();
-        } else {
-          wekker.lampOn(wekker.currColor, wekker.currBrightnessLvl);
-        }
-        buttonPressed[B_ONOFF] = false;
-      }*/
-
       else if (buttonPressed[B_PLUS]) {
         if (wekker.getCurrBrightnessLvl() == HI) {
           ;
