@@ -46,9 +46,10 @@ void smartSleep::init() {
     lcdHome()();
      */
 
+    //UNCOMMENT WHEN MP3 MODULE IS CONNECTED!
     //speakersSerial.begin(9600, SERIAL_8N1, 3, 1);
     //speakers.begin(speakersSerial, /*isACK = */true, /*doReset = */true);
-	//speakers.setTimeOut(500);
+    //speakers.setTimeOut(500);
     //speakers.volume(10);
     //speakers.EQ(DFPLAYER_EQ_NORMAL);
     //speakers.outputDevice(DFPLAYER_DEVICE_SD);
