@@ -88,6 +88,12 @@ void loop() {
   unsigned long currMillis = millis();
 
   if (buttonPressed[B_ONOFF]) {
+    ;
+  }
+
+  if (buttonPressed[B_SNOOZE]) {
+    wekker.stopSound();
+    buttonPressed[B_SNOOZE] = false;
     if (currState == S_SLEEP || currState == S_WAKE) {
       wekker.lampOff();
       currState = S_IDLE;
@@ -100,11 +106,6 @@ void loop() {
       }
     }
     buttonPressed[B_ONOFF] = false;
-  }
-
-  if (buttonPressed[B_SNOOZE]) {
-    wekker.stopSound();
-    buttonPressed[B_SNOOZE] = false;
   }
 
   switch(currState) {
